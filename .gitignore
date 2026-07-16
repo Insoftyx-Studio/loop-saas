@@ -1,0 +1,18 @@
+# secrets — never commit
+.env
+.env.*
+!.env.example
+setup.env
+
+# deps & builds
+node_modules/
+dist/
+.vercel/
+
+# supabase local
+.branches/
+.temp/
+
+# os / editor
+.DS_Store
+Thumbs.db

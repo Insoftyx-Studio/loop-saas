@@ -1,0 +1,39 @@
+project_id = "loop"
+
+[api]
+enabled = true
+port = 54321
+# Expose `app` so PostgREST can call app.* RPCs (agency_overview, client_snapshot,
+# set_deliverable_status). `graphql_public` is Supabase's default extra schema.
+schemas = ["public", "app", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+major_version = 16
+
+[db.pooler]
+enabled = true
+# Transaction mode is the right default for serverless/edge (Vercel) callers:
+# a connection is held only for the duration of a statement.
+pool_mode = "transaction"
+default_pool_size = 15
+max_client_conn = 200
+
+[auth]
+enabled = true
+site_url = "http://localhost:5173"
+additional_redirect_urls = ["http://localhost:5173"]
+jwt_expiry = 3600
+enable_signup = false          # demo uses seeded logins only
+
+[auth.email]
+enable_confirmations = false
+
+[storage]
+enabled = true
+file_size_limit = "50MiB"
+
+[realtime]
+enabled = true

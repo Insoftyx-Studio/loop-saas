@@ -1,0 +1,255 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ------------------------------------------------------------------ *
+ * Tokens — named for the product's world: paper, ink, edge, loop.
+ * One hue per mode; surfaces shift lightness only. Accent = the loop.
+ * ------------------------------------------------------------------ */
+:root {
+  --paper: 249 249 251;
+  --raised: 255 255 255;
+  --sunk: 242 242 246;
+
+  --ink: 20 20 26;
+  --ink-soft: 58 58 68;
+  --ink-mute: 108 108 122;
+  --ink-faint: 152 152 166;
+
+  --edge: 228 228 235;
+  --edge-soft: 237 237 242;
+  --edge-strong: 210 210 220;
+
+  --accent: 99 91 255;
+  --accent-ink: 255 255 255;
+
+  /* workflow categories — smooth, distinct hues */
+  --todo: 232 152 42;      /* honey amber */
+  --progress: 74 118 244;  /* electric blue */
+  --done: 34 176 121;      /* fresh green */
+
+  --approved: 34 176 121;
+  --pending: 232 152 42;
+  --overdue: 236 84 92;
+
+  /* glass */
+  --glass-bg: 255 255 255;
+  --glass-alpha: 0.62;
+
+  --grain: 0.02;
+  color-scheme: light;
+}
+
+.dark {
+  --paper: 13 13 17;
+  --raised: 22 22 28;
+  --sunk: 9 9 12;
+
+  --ink: 244 244 249;
+  --ink-soft: 202 202 212;
+  --ink-mute: 146 146 158;
+  --ink-faint: 100 100 112;
+
+  --edge: 40 40 48;
+  --edge-soft: 30 30 37;
+  --edge-strong: 58 58 68;
+
+  --accent: 139 130 255;
+  --accent-ink: 13 12 18;
+
+  --todo: 240 176 82;
+  --progress: 116 152 252;
+  --done: 66 200 148;
+
+  --approved: 66 200 148;
+  --pending: 240 176 82;
+  --overdue: 244 116 122;
+
+  --glass-bg: 26 26 33;
+  --glass-alpha: 0.55;
+
+  --grain: 0.035;
+  color-scheme: dark;
+}
+
+* {
+  border-color: rgb(var(--edge));
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  margin: 0;
+  background: rgb(var(--paper));
+  color: rgb(var(--ink));
+  font-family: "Satoshi", ui-sans-serif, system-ui, sans-serif;
+  font-feature-settings: "ss01";
+  /* Surfaces & text ease when the theme flips underneath a running transition. */
+  transition: background-color 420ms cubic-bezier(0.23, 1, 0.32, 1),
+    color 420ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+::selection {
+  background: rgb(var(--accent) / 0.18);
+  color: rgb(var(--ink));
+}
+
+h1, h2, h3, h4 {
+  text-wrap: balance;
+}
+p {
+  text-wrap: pretty;
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum", "ss01";
+}
+.mono {
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+/* display face — Clash Display, for hero moments */
+.serif,
+.display {
+  font-family: "Clash Display", ui-sans-serif, system-ui, sans-serif;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+}
+
+/* Fine paper grain — barely-there texture, not a gradient. */
+.grain::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+  opacity: var(--grain);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ------------------------------------------------------------------ *
+ * Glass — translucent frosted surfaces for floating / overlay layers.
+ * A hairline top highlight gives the pane a lit edge.
+ * ------------------------------------------------------------------ */
+.glass {
+  background: rgb(var(--glass-bg) / var(--glass-alpha));
+  backdrop-filter: blur(20px) saturate(1.6);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  border: 1px solid rgb(255 255 255 / 0.08);
+  box-shadow:
+    inset 0 1px 0 0 rgb(255 255 255 / 0.14),
+    0 1px 2px -1px rgb(0 0 0 / 0.08),
+    0 12px 34px -12px rgb(0 0 0 / 0.22);
+}
+.dark .glass {
+  border-color: rgb(255 255 255 / 0.06);
+}
+
+/* Soft ambient accent glow behind an element */
+.glow-accent {
+  box-shadow:
+    0 0 0 1px rgb(var(--accent) / 0.22),
+    0 10px 40px -8px rgb(var(--accent) / 0.42),
+    0 2px 10px -2px rgb(var(--accent) / 0.28);
+}
+
+/* Radial bloom used as a decorative backdrop */
+.bloom {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(56px);
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Sticky note — tactile paper card, tinted per category via --note */
+.note {
+  position: relative;
+  background:
+    linear-gradient(180deg, rgb(var(--note) / 0.16), rgb(var(--note) / 0.09)),
+    rgb(var(--raised));
+  border: 1px solid rgb(var(--note) / 0.28);
+  border-radius: 12px;
+  box-shadow:
+    0 1px 1px rgb(0 0 0 / 0.04),
+    0 10px 20px -12px rgb(var(--note) / 0.55);
+  transition: transform 0.28s cubic-bezier(0.23, 1, 0.32, 1),
+    box-shadow 0.28s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.note::before {
+  /* a little strip of tape */
+  content: "";
+  position: absolute;
+  top: -7px;
+  left: 50%;
+  width: 46px;
+  height: 14px;
+  transform: translateX(-50%) rotate(-2deg);
+  background: rgb(var(--note) / 0.32);
+  border: 1px solid rgb(var(--note) / 0.28);
+  border-radius: 2px;
+  backdrop-filter: blur(2px);
+}
+.note:hover {
+  transform: translateY(-3px) rotate(0deg) !important;
+  box-shadow:
+    0 2px 2px rgb(0 0 0 / 0.05),
+    0 18px 34px -14px rgb(var(--note) / 0.7);
+}
+
+/* Scrollbar — quiet. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--edge-strong)) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgb(var(--edge-strong));
+  border-radius: 999px;
+  border: 3px solid rgb(var(--paper));
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--ink-faint));
+}
+
+/* ------------------------------------------------------------------ *
+ * Smooth theme switch — a circular reveal from the toggle, not a flip.
+ * The default cross-fade is disabled so the clip-path animation (driven
+ * from theme.tsx via the Web Animations API) reads cleanly on top.
+ * ------------------------------------------------------------------ */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-old(root) {
+  z-index: 0;
+}
+::view-transition-new(root) {
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Focus — visible, on the accent, never removed. */
+:focus-visible {
+  outline: 2px solid rgb(var(--accent));
+  outline-offset: 2px;
+  border-radius: 4px;
+}
