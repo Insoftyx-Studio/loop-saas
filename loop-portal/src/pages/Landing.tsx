@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import {
   ArrowUpRight,
   Check,
@@ -125,7 +125,7 @@ function Hero() {
   const fade = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
 
   return (
-    <header ref={ref} className="relative mx-auto max-w-6xl px-5 pt-40 md:pt-48">
+    <header ref={ref} className="relative mx-auto max-w-6xl px-5 pt-40 pb-24 md:pt-48 md:pb-32">
       {/* ambient wash */}
       <div
         aria-hidden
@@ -247,7 +247,7 @@ const features = [
 
 function Features() {
   return (
-    <section id="work" className="mx-auto max-w-6xl px-5 py-28 md:py-40">
+    <section id="work" className="mx-auto max-w-6xl px-5 pb-24 md:pb-32">
       <Reveal className="mb-14 max-w-2xl">
         <Item variants={fadeUp} className="text-[13px] font-medium uppercase tracking-[0.14em] text-ink-faint">
           What it replaces
@@ -303,7 +303,7 @@ function LoopStatement() {
       " ",
     );
   return (
-    <section id="loop" ref={ref} className="mx-auto max-w-4xl px-5 py-28 text-center md:py-40">
+    <section id="loop" ref={ref} className="mx-auto max-w-4xl px-5 pb-24 text-center md:pb-32">
       <p className="text-[13px] font-medium uppercase tracking-[0.14em] text-ink-faint">
         In the loop
       </p>
@@ -330,7 +330,7 @@ const stats = [
 
 function Stats() {
   return (
-    <section className="mx-auto max-w-6xl px-5 pb-28 md:pb-40">
+    <section className="mx-auto max-w-6xl px-5 pb-24 md:pb-32">
       <Reveal className="grid gap-3 sm:grid-cols-3">
         {stats.map((s) => (
           <Item
@@ -349,9 +349,178 @@ function Stats() {
   );
 }
 
+const ANNUAL_DISCOUNT = 0.2; // 20% off when billed annually
+
+const plans = [
+  {
+    name: "Starter",
+    monthly: 9,
+    tagline: "For a solo shop with a handful of clients.",
+    features: ["Up to 3 clients", "Unlimited projects & deliverables", "Client approvals & requests", "Email notifications"],
+    featured: false,
+  },
+  {
+    name: "Growth",
+    monthly: 29,
+    tagline: "The sweet spot for a small studio.",
+    features: ["Up to 15 clients", "Everything in Starter", "Branded client portals", "Invoicing & status tracking", "Priority support"],
+    featured: true,
+  },
+  {
+    name: "Agency",
+    monthly: 99,
+    tagline: "For teams running a full client roster.",
+    features: ["Unlimited clients", "Everything in Growth", "Multiple agency seats", "Custom domain", "Dedicated onboarding"],
+    featured: false,
+  },
+];
+
+type Billing = "monthly" | "annual";
+
+function BillingToggle({ billing, onChange }: { billing: Billing; onChange: (b: Billing) => void }) {
+  const opts: { key: Billing; label: string }[] = [
+    { key: "monthly", label: "Monthly" },
+    { key: "annual", label: "Yearly" },
+  ];
+  return (
+    <div className="mb-12 flex justify-center">
+      <div className="relative inline-flex rounded-full border border-edge bg-raised p-1">
+        {opts.map((o) => (
+          <button
+            key={o.key}
+            onClick={() => onChange(o.key)}
+            className="relative rounded-full px-4 py-1.5 text-[13px] font-medium"
+          >
+            {billing === o.key && (
+              <motion.span
+                layoutId="billing-pill"
+                className="absolute inset-0 rounded-full bg-ink"
+                transition={{ type: "spring", duration: 0.4, bounce: 0.15 }}
+              />
+            )}
+            <span
+              className={cn(
+                "relative z-10 inline-flex items-center gap-2 transition-colors duration-200",
+                billing === o.key ? "text-paper" : "text-ink-mute",
+              )}
+            >
+              {o.label}
+              {o.key === "annual" && (
+                <span className="rounded-full bg-approved/15 px-1.5 py-0.5 text-[10.5px] font-semibold text-approved">
+                  Save 20%
+                </span>
+              )}
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Pricing() {
+  const [billing, setBilling] = useState<Billing>("monthly");
+
+  return (
+    <section id="pricing" className="mx-auto max-w-6xl px-5 pb-24 md:pb-32">
+      <Reveal className="mb-14 max-w-2xl">
+        <Item variants={fadeUp} className="text-[13px] font-medium uppercase tracking-[0.14em] text-ink-faint">
+          Pricing
+        </Item>
+        <Item variants={fadeUp} className="mt-3 text-[clamp(1.8rem,3.4vw,2.8rem)] font-semibold leading-tight tracking-tight">
+          Simple plans, priced by how many clients you're keeping in the loop.
+        </Item>
+      </Reveal>
+
+      <BillingToggle billing={billing} onChange={setBilling} />
+
+      <Reveal className="grid gap-3 sm:grid-cols-3" amount={0.1}>
+        {plans.map((p) => {
+          const perMonth = billing === "annual" ? Math.round(p.monthly * (1 - ANNUAL_DISCOUNT)) : p.monthly;
+          const yearlySave = (p.monthly - perMonth) * 12; // saved per year vs. paying monthly
+          return (
+            <Item
+              key={p.name}
+              variants={fadeUp}
+              className={cn(
+                "relative flex flex-col rounded-xl border p-6",
+                p.featured
+                  ? "border-accent/40 bg-accent/[0.05] shadow-glow"
+                  : "border-edge bg-raised",
+              )}
+            >
+              {p.featured && (
+                <span className="absolute -top-3 left-6 rounded-full bg-accent px-2.5 py-1 text-[11px] font-semibold text-accent-ink">
+                  Most popular
+                </span>
+              )}
+              <h3 className="text-[16px] font-semibold">{p.name}</h3>
+              <p className="mt-1 text-[13px] text-ink-mute">{p.tagline}</p>
+
+              <div className="mt-5 flex items-baseline gap-1">
+                <span className="font-display text-[clamp(2rem,3vw,2.6rem)] leading-none">$</span>
+                <span className="relative inline-block font-display text-[clamp(2rem,3vw,2.6rem)] leading-none tnum">
+                  {/* keep width stable while the number swaps underneath */}
+                  <span className="invisible">{Math.max(p.monthly, perMonth)}</span>
+                  {/* keyed → React remounts on price change, replaying the slide-in */}
+                  <motion.span
+                    key={perMonth}
+                    initial={{ y: "0.35em", opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ duration: 0.28, ease: easeOut }}
+                    className="absolute inset-0"
+                  >
+                    {perMonth}
+                  </motion.span>
+                </span>
+                <span className="text-[13px] text-ink-faint">/ mo</span>
+              </div>
+
+              <div className="mt-1.5 h-5 text-[12px] text-ink-faint">
+                <motion.span
+                  key={billing}
+                  initial={{ opacity: 0, y: 3 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.22, ease: easeOut }}
+                  className="inline-flex items-center gap-1.5"
+                >
+                  {billing === "annual" ? (
+                    <>
+                      <span>billed yearly</span>
+                      <span className="rounded-full bg-approved/15 px-1.5 py-0.5 text-[10.5px] font-semibold text-approved">
+                        Save ${yearlySave}
+                      </span>
+                    </>
+                  ) : (
+                    "billed monthly"
+                  )}
+                </motion.span>
+              </div>
+
+              <ul className="mt-6 flex-1 space-y-2.5">
+                {p.features.map((f) => (
+                  <li key={f} className="flex items-start gap-2 text-[13.5px] text-ink-soft">
+                    <Check size={15} className="mt-0.5 shrink-0 text-accent" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <Link to="/login" className="mt-7">
+                <Button variant={p.featured ? "primary" : "secondary"} block>
+                  Start Now <ArrowUpRight size={15} />
+                </Button>
+              </Link>
+            </Item>
+          );
+        })}
+      </Reveal>
+    </section>
+  );
+}
+
 function CTA() {
   return (
-    <section id="pricing" className="mx-auto max-w-6xl px-5 pb-28 md:pb-40">
+    <section className="mx-auto max-w-6xl px-5 pb-24 md:pb-32">
       <Reveal>
         <Item
           variants={fadeUp}
@@ -379,7 +548,7 @@ function CTA() {
             <Link to="/login">
               <Button
                 size="lg"
-                className="rounded-full bg-paper text-ink hover:bg-paper/90"
+                className="rounded-full !bg-paper !text-ink hover:!bg-paper/90"
               >
                 Open the live demo <ArrowUpRight size={17} />
               </Button>
@@ -423,6 +592,7 @@ export default function Landing() {
       <Features />
       <LoopStatement />
       <Stats />
+      <Pricing />
       <CTA />
       <Footer />
     </motion.main>

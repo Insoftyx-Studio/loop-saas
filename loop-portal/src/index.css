@@ -77,6 +77,8 @@
 }
 
 html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 88px; /* clears the fixed/sticky nav when landing on an anchor */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;

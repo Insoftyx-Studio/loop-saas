@@ -1,4 +1,4 @@
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, type ComponentType } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { Loader2 } from "lucide-react";
@@ -9,18 +9,41 @@ import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import { AgencyShell } from "./pages/agency/AgencyShell";
 
+// A fresh deploy renames chunk files, so a tab left open across a deploy will
+// 404 on the old hashed filename the next time it navigates to a lazy route.
+// Retry once with a full reload (which fetches the new index.html + manifest)
+// instead of leaving the click looking dead until the user refreshes by hand.
+function lazyWithRetry<T extends ComponentType<any>>(factory: () => Promise<{ default: T }>) {
+  const RELOAD_KEY = "loop-chunk-retry";
+  return lazy(async () => {
+    try {
+      const mod = await factory();
+      sessionStorage.removeItem(RELOAD_KEY);
+      return mod;
+    } catch (err) {
+      if (!sessionStorage.getItem(RELOAD_KEY)) {
+        sessionStorage.setItem(RELOAD_KEY, "1");
+        window.location.reload();
+        return new Promise<{ default: T }>(() => {}); // reload takes over
+      }
+      sessionStorage.removeItem(RELOAD_KEY);
+      throw err;
+    }
+  });
+}
+
 // Lazy: split the dashboard + portal into separate chunks
-const ChangePassword = lazy(() => import("./pages/ChangePassword"));
-const Overview = lazy(() => import("./pages/agency/Overview"));
-const Clients = lazy(() => import("./pages/agency/Clients"));
-const ClientDetail = lazy(() => import("./pages/agency/ClientDetail"));
-const Projects = lazy(() => import("./pages/agency/Projects"));
-const Deliverables = lazy(() => import("./pages/agency/Deliverables"));
-const Requests = lazy(() => import("./pages/agency/Requests"));
-const Invoices = lazy(() => import("./pages/agency/Invoices"));
-const Updates = lazy(() => import("./pages/agency/Updates"));
-const Accounts = lazy(() => import("./pages/agency/Accounts"));
-const PortalReal = lazy(() => import("./pages/client/PortalReal"));
+const ChangePassword = lazyWithRetry(() => import("./pages/ChangePassword"));
+const Overview = lazyWithRetry(() => import("./pages/agency/Overview"));
+const Clients = lazyWithRetry(() => import("./pages/agency/Clients"));
+const ClientDetail = lazyWithRetry(() => import("./pages/agency/ClientDetail"));
+const Projects = lazyWithRetry(() => import("./pages/agency/Projects"));
+const Deliverables = lazyWithRetry(() => import("./pages/agency/Deliverables"));
+const Requests = lazyWithRetry(() => import("./pages/agency/Requests"));
+const Invoices = lazyWithRetry(() => import("./pages/agency/Invoices"));
+const Updates = lazyWithRetry(() => import("./pages/agency/Updates"));
+const Accounts = lazyWithRetry(() => import("./pages/agency/Accounts"));
+const PortalReal = lazyWithRetry(() => import("./pages/client/PortalReal"));
 
 function Loading() {
   return <div className="grid min-h-screen place-items-center"><Loader2 className="animate-spin text-ink-mute" /></div>;

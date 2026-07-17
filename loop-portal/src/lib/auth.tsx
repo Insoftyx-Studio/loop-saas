@@ -61,9 +61,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
-    await supabase.auth.signOut();
-    applyProfile(null);
-    setSession(null);
+    try {
+      await supabase.auth.signOut();
+    } catch {
+      // Clear local state and let the caller navigate away regardless of
+      // whether the remote sign-out call succeeded — a flaky network
+      // shouldn't leave the sign-out button looking like it did nothing.
+    } finally {
+      applyProfile(null);
+      setSession(null);
+    }
   }, [applyProfile]);
 
   const value = useMemo(

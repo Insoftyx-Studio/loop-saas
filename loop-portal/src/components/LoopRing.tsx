@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { motion } from "framer-motion";
 import { cn } from "../lib/cn";
 
@@ -23,18 +24,27 @@ export function LoopRing({
   className?: string;
   delay?: number;
 }) {
+  const filterId = useId();
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   const arc = Math.max(0.0001, Math.min(1, pct));
   const col = accent ? `rgb(${accent})` : "rgb(var(--accent))";
-  const glow = accent ? `rgb(${accent} / 0.5)` : "rgb(var(--accent) / 0.5)";
   const headAngle = -90 + arc * 360;
   const headX = size / 2 + r * Math.cos((headAngle * Math.PI) / 180);
   const headY = size / 2 + r * Math.sin((headAngle * Math.PI) / 180);
 
   return (
     <div className={cn("relative inline-grid place-items-center", className)} style={{ width: size, height: size }}>
-      <svg width={size} height={size} className="-rotate-90">
+      {/* overflow:visible lets the glow's soft falloff extend past the square
+         SVG viewport — without it the outermost <svg> clips it into a box. */}
+      <svg width={size} height={size} className="-rotate-90" style={{ overflow: "visible" }}>
+        <defs>
+          {/* Widened filter region so the blur has room to render as a soft
+             radial glow instead of clipping to the stroke's bounding box. */}
+          <filter id={filterId} x="-75%" y="-75%" width="250%" height="250%">
+            <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor={col} floodOpacity="0.5" />
+          </filter>
+        </defs>
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -56,7 +66,7 @@ export function LoopRing({
           whileInView={{ strokeDashoffset: c * (1 - arc) }}
           viewport={{ once: true }}
           transition={{ duration: 1.05, ease: [0.23, 1, 0.32, 1], delay }}
-          style={{ filter: `drop-shadow(0 0 5px ${glow})` }}
+          filter={`url(#${filterId})`}
         />
       </svg>
       {arc > 0.03 && arc < 0.995 && (
