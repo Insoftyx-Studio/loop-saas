@@ -1,6 +1,5 @@
 import { Suspense, lazy, type ComponentType } from "react";
-import { AnimatePresence } from "framer-motion";
-import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "./lib/auth";
 
@@ -73,32 +72,35 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  const location = useLocation();
+  // NOTE: no route-level <AnimatePresence mode="wait"> here. Wrapping <Routes>
+  // in a "wait" transition races with the <Navigate> redirects the route
+  // guards fire on logout/auth changes — the redirect lands mid-exit and
+  // AnimatePresence ends up with no child mounted, blanking #root until a
+  // manual reload. Routes render synchronously; pages keep their own
+  // initial/animate fade-ins.
   return (
     <div className="grain min-h-screen">
       <Suspense fallback={<Loading />}>
-        <AnimatePresence mode="wait">
-          <Routes location={location} key={location.pathname.split("/").slice(0, 2).join("/")}>
-            <Route path="/" element={<Landing />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/change-password" element={<RequireAuth><ChangePassword /></RequireAuth>} />
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/change-password" element={<RequireAuth><ChangePassword /></RequireAuth>} />
 
-            <Route path="/app" element={<RequireAgency><AgencyShell /></RequireAgency>}>
-              <Route index element={<Overview />} />
-              <Route path="accounts" element={<Accounts />} />
-              <Route path="clients" element={<Clients />} />
-              <Route path="clients/:id" element={<ClientDetail />} />
-              <Route path="projects" element={<Projects />} />
-              <Route path="deliverables" element={<Deliverables />} />
-              <Route path="requests" element={<Requests />} />
-              <Route path="invoices" element={<Invoices />} />
-              <Route path="updates" element={<Updates />} />
-            </Route>
+          <Route path="/app" element={<RequireAgency><AgencyShell /></RequireAgency>}>
+            <Route index element={<Overview />} />
+            <Route path="accounts" element={<Accounts />} />
+            <Route path="clients" element={<Clients />} />
+            <Route path="clients/:id" element={<ClientDetail />} />
+            <Route path="projects" element={<Projects />} />
+            <Route path="deliverables" element={<Deliverables />} />
+            <Route path="requests" element={<Requests />} />
+            <Route path="invoices" element={<Invoices />} />
+            <Route path="updates" element={<Updates />} />
+          </Route>
 
-            <Route path="/portal/*" element={<RequireClient><PortalReal /></RequireClient>} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </AnimatePresence>
+          <Route path="/portal/*" element={<RequireClient><PortalReal /></RequireClient>} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </Suspense>
     </div>
   );

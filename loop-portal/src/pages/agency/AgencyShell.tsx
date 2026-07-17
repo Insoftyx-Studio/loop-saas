@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -13,6 +13,7 @@ import {
   LogOut,
   Menu,
   X,
+  Loader2,
 } from "lucide-react";
 import { Logo } from "../../components/Logo";
 import { ThemeToggle } from "../../components/ThemeToggle";
@@ -177,18 +178,21 @@ export function AgencyShell() {
         </header>
 
         <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 sm:py-8">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={location.pathname}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.28, ease: easeOut }}
-              className="mx-auto max-w-6xl"
-            >
+          {/* Keyed motion.div (no AnimatePresence "wait") so each page reliably
+             replays its initial→animate fade without the exit-transition race
+             that could leave the content stuck at opacity 0. A local Suspense
+             keeps the sidebar visible while a lazy page chunk loads. */}
+          <motion.div
+            key={location.pathname}
+            initial={{ y: 8 }}
+            animate={{ y: 0 }}
+            transition={{ duration: 0.28, ease: easeOut }}
+            className="mx-auto max-w-6xl"
+          >
+            <Suspense fallback={<div className="grid place-items-center py-24"><Loader2 className="animate-spin text-ink-mute" /></div>}>
               <Outlet />
-            </motion.div>
-          </AnimatePresence>
+            </Suspense>
+          </motion.div>
         </main>
       </div>
     </div>

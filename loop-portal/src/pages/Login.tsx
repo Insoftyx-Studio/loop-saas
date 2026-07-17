@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
 import { Logo } from "../components/Logo";
 import { ThemeToggle } from "../components/ThemeToggle";
@@ -28,13 +27,7 @@ export default function Login() {
   }
 
   return (
-    <motion.main
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.3 }}
-      className="grid min-h-screen w-full lg:grid-cols-2"
-    >
+    <main className="grid min-h-screen w-full lg:grid-cols-2">
       <aside className="relative hidden flex-col justify-between overflow-hidden bg-ink p-10 text-paper lg:flex">
         <div
           aria-hidden
@@ -120,6 +113,6 @@ export default function Login() {
           </div>
         </div>
       </section>
-    </motion.main>
+    </main>
   );
 }

@@ -580,13 +580,10 @@ function Footer() {
 
 export default function Landing() {
   return (
-    <motion.main
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.3 }}
-      className="w-full max-w-full overflow-x-hidden"
-    >
+    // Plain <main>: the page must be visible by default and never gate its
+    // whole visibility on a JS opacity animation (which could stall at 0).
+    // Inner sections still animate in via Reveal/whileInView.
+    <main className="w-full max-w-full overflow-x-hidden">
       <Nav />
       <Hero />
       <Features />
@@ -595,6 +592,6 @@ export default function Landing() {
       <Pricing />
       <CTA />
       <Footer />
-    </motion.main>
+    </main>
   );
 }
