@@ -4,6 +4,7 @@ import { Card, Avatar } from "../../components/ui/primitives";
 import { Modal } from "../../components/ui/Modal";
 import { Input, FieldLabel } from "../../components/ui/Field";
 import { Button } from "../../components/ui/Button";
+import { Select } from "../../components/ui/Select";
 import { Reveal, Item, fadeUp } from "../../components/motion";
 import { money, fmtDate } from "../../lib/data";
 import { PageHead } from "./_head";
@@ -83,12 +84,16 @@ export default function Invoices() {
                     <p className="text-[12.5px] text-ink-mute">{c?.name} · issued {fmtDate(i.issued)}</p>
                   </div>
                   <span className="tnum text-[14px] font-semibold">{money(i.amount_cents / 100)}</span>
-                  <select value={i.status} onChange={(e) => changeStatus(i.id, e.target.value as Invoice["status"])}
-                    className="rounded-md border border-edge bg-sunk px-2 py-1 text-[12.5px] capitalize outline-none focus:border-accent">
-                    <option value="pending">Pending</option>
-                    <option value="paid">Paid</option>
-                    <option value="overdue">Overdue</option>
-                  </select>
+                  <Select
+                    aria-label="Invoice status"
+                    value={i.status}
+                    onChange={(v) => changeStatus(i.id, v as Invoice["status"])}
+                    options={[
+                      { value: "pending", label: "Pending", tone: "pending" },
+                      { value: "paid", label: "Paid", tone: "approved" },
+                      { value: "overdue", label: "Overdue", tone: "overdue" },
+                    ]}
+                  />
                 </Card>
               </Item>
             );

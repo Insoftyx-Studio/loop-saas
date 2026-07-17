@@ -1,4 +1,4 @@
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -11,6 +11,7 @@ import {
   Megaphone,
   Contact,
   LogOut,
+  KeyRound,
   Menu,
   X,
   Loader2,
@@ -18,8 +19,9 @@ import {
 import { Logo } from "../../components/Logo";
 import { ThemeToggle } from "../../components/ThemeToggle";
 import { Avatar } from "../../components/ui/primitives";
-import { useStore, projectProgress } from "../../lib/store";
+import { projectProgress } from "../../lib/store";
 import { useAuth } from "../../lib/auth";
+import { getOverview } from "../../lib/api";
 import { cn } from "../../lib/cn";
 import { easeOut } from "../../components/motion";
 
@@ -34,16 +36,7 @@ const nav = [
   { to: "/app/updates", label: "Updates", icon: Megaphone },
 ];
 
-function NavItems({ onNavigate }: { onNavigate?: () => void }) {
-  const { db } = useStore();
-  const openApprovals = db.deliverables.filter((d) => d.status === "shared").length;
-  const openRequests = db.requests.filter((r) => r.status === "open").length;
-
-  const counts: Record<string, number> = {
-    "/app/deliverables": openApprovals,
-    "/app/requests": openRequests,
-  };
-
+function NavItems({ onNavigate, counts }: { onNavigate?: () => void; counts: Record<string, number> }) {
   return (
     <nav className="flex flex-col gap-0.5">
       {nav.map((n) => (
@@ -88,15 +81,31 @@ function NavItems({ onNavigate }: { onNavigate?: () => void }) {
 function SidebarFooter() {
   const { profile, signOut } = useAuth();
   const nav = useNavigate();
+  const initials =
+    (profile?.full_name || "?")
+      .split(/\s+/)
+      .map((w) => w[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase() || "?";
   return (
-    <div className="flex items-center gap-2.5 rounded-md border border-edge bg-raised p-2.5">
-      <Avatar initials="SR" size={34} />
+    <div className="flex items-center gap-2 rounded-md border border-edge bg-raised p-2.5">
+      <Avatar initials={initials} size={34} />
       <div className="min-w-0 flex-1">
         <p className="truncate text-[13px] font-medium">{profile?.full_name}</p>
-        <p className="truncate text-[11.5px] text-ink-faint">Northwind Studio</p>
+        <p className="truncate text-[11.5px] text-ink-faint">Agency admin</p>
       </div>
       <button
+        aria-label="Change password"
+        title="Change password"
+        onClick={() => nav("/change-password")}
+        className="grid h-8 w-8 place-items-center rounded text-ink-faint transition-colors hover:bg-sunk hover:text-ink"
+      >
+        <KeyRound size={16} />
+      </button>
+      <button
         aria-label="Sign out"
+        title="Sign out"
         onClick={() => {
           signOut().then(() => nav("/login"));
         }}
@@ -112,6 +121,24 @@ export function AgencyShell() {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  // Sidebar badges reflect REAL data (pending approvals / open requests) via
+  // the agency_overview RPC — not the legacy mock store. Refetched on route
+  // change so, e.g., approving a deliverable or closing a request updates the
+  // count when you navigate back.
+  const [counts, setCounts] = useState<Record<string, number>>({});
+  useEffect(() => {
+    let cancelled = false;
+    getOverview()
+      .then((o) => {
+        if (!cancelled)
+          setCounts({ "/app/deliverables": o.pending_approvals, "/app/requests": o.open_requests });
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [location.pathname]);
+
   return (
     <div className="flex min-h-screen w-full">
       {/* Desktop sidebar */}
@@ -120,7 +147,7 @@ export function AgencyShell() {
           <div className="px-2 pb-6">
             <Logo />
           </div>
-          <NavItems />
+          <NavItems counts={counts} />
         </div>
         <SidebarFooter />
       </aside>
@@ -154,7 +181,7 @@ export function AgencyShell() {
                     <X size={18} />
                   </button>
                 </div>
-                <NavItems onNavigate={() => setMobileOpen(false)} />
+                <NavItems counts={counts} onNavigate={() => setMobileOpen(false)} />
               </div>
               <SidebarFooter />
             </motion.aside>
