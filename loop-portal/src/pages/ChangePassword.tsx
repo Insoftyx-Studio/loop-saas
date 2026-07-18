@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loader2, Check, ArrowLeft } from "lucide-react";
 import { useAuth } from "../lib/auth";
+import { PasswordInput } from "../components/ui/PasswordInput";
 
 export default function ChangePassword() {
   const { changePassword } = useAuth();
@@ -41,11 +42,19 @@ export default function ChangePassword() {
         </div>
       ) : (
         <div className="mt-8 space-y-3">
-          <input type="password" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="New password"
-            className="w-full rounded-lg border border-edge bg-raised px-3.5 py-2.5 text-[14px] outline-none focus:border-accent" />
-          <input type="password" value={pw2} onChange={(e) => setPw2(e.target.value)} placeholder="Confirm new password"
+          <PasswordInput
+            value={pw}
+            onChange={(e) => setPw(e.target.value)}
+            placeholder="New password"
+            autoComplete="new-password"
+          />
+          <PasswordInput
+            value={pw2}
+            onChange={(e) => setPw2(e.target.value)}
+            placeholder="Confirm new password"
+            autoComplete="new-password"
             onKeyDown={(e) => e.key === "Enter" && submit()}
-            className="w-full rounded-lg border border-edge bg-raised px-3.5 py-2.5 text-[14px] outline-none focus:border-accent" />
+          />
           {err && <p className="rounded-md bg-red-500/10 px-3 py-2 text-[13px] text-red-500">{err}</p>}
           <button onClick={submit} disabled={busy}
             className="flex w-full items-center justify-center gap-2 rounded-lg bg-ink px-4 py-2.5 text-[14px] font-semibold text-paper hover:opacity-90 disabled:opacity-50">
