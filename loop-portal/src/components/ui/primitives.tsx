@@ -18,7 +18,9 @@ export function Card({
       className={cn(
         "rounded-lg border border-edge bg-raised",
         interactive &&
-          "transition-[border-color,transform,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:border-edge-strong hover:shadow-lift",
+          // active: gives touch devices tactile feedback — they never get :hover,
+          // so without it tapping a card feels unresponsive on mobile.
+          "transition-[border-color,transform,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:border-edge-strong hover:shadow-lift active:scale-[0.985] active:duration-100",
         className,
       )}
       {...rest}

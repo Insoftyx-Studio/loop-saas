@@ -333,22 +333,38 @@ function LoopStatementScrubbed() {
   );
 }
 
-/** Mobile: one fade for the whole line instead of ~17 motion values writing
- *  opacity on every scroll frame. Reads the same, costs a fraction. */
-function LoopStatementStatic() {
+/**
+ * Mobile: the words still reveal one after another, but as a single
+ * staggered run that fires ONCE when the line scrolls into view — rather
+ * than ~17 motion values re-writing opacity on every scroll frame. Same
+ * signature moment, a fraction of the cost (transform/opacity only, so the
+ * compositor does the work, not the main thread).
+ */
+function LoopStatementStaggered() {
+  const words = LOOP_STATEMENT.split(" ");
   return (
     <section id="loop" className="mx-auto max-w-4xl px-5 pb-24 text-center md:pb-32">
       <p className="text-[13px] font-medium uppercase tracking-[0.14em] text-ink-faint">
         In the loop
       </p>
       <motion.p
-        initial={{ opacity: 0, y: 8 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.25 }}
-        transition={{ duration: 0.5, ease: easeOut }}
         className={LOOP_LINE_CLASS}
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: true, amount: 0.2 }}
+        variants={{ hidden: {}, show: { transition: { staggerChildren: 0.035 } } }}
       >
-        {LOOP_STATEMENT}
+        {words.map((w, i) => (
+          <motion.span
+            key={i}
+            variants={{
+              hidden: { opacity: 0.15, y: 8 },
+              show: { opacity: 1, y: 0, transition: { duration: 0.42, ease: easeOut } },
+            }}
+          >
+            {w}
+          </motion.span>
+        ))}
       </motion.p>
     </section>
   );
@@ -356,7 +372,7 @@ function LoopStatementStatic() {
 
 function LoopStatement() {
   const reduced = useReducedEffects();
-  return reduced ? <LoopStatementStatic /> : <LoopStatementScrubbed />;
+  return reduced ? <LoopStatementStaggered /> : <LoopStatementScrubbed />;
 }
 
 const stats = [
