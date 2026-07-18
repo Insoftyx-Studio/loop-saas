@@ -249,6 +249,49 @@ p {
   }
 }
 
+/* ------------------------------------------------------------------ *
+ * Mobile performance.
+ * Phones pay a steep GPU cost for backdrop-filter on fixed/sticky bars
+ * (the backdrop is re-sampled every scroll frame), for large blur()
+ * radii, and for full-viewport fixed overlays. Those are the three
+ * things that make scrolling feel laggy on a phone while being fine on
+ * a laptop. Swap them for cheaper equivalents — layout is unchanged.
+ * ------------------------------------------------------------------ */
+@media (max-width: 767px) {
+  /* A fixed, full-viewport noise layer forces the compositor to keep and
+     repaint a screen-sized layer while scrolling — for a texture that is
+     barely perceptible (2–3% opacity). Not worth the frames on mobile. */
+  .grain::before {
+    display: none;
+  }
+
+  /* backdrop-filter is the single biggest scroll-jank source on phones. */
+  .glass,
+  [class*="backdrop-blur"] {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  .note::before {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  /* Without the frost, these surfaces need to be near-opaque to stay legible. */
+  :root {
+    --glass-alpha: 0.94;
+  }
+  :root.dark {
+    --glass-alpha: 0.93;
+  }
+
+  /* A 56px blur on a ~280px element is expensive to rasterise; smaller
+     radius + lower opacity keeps the ambient wash at a fraction of the cost. */
+  .bloom {
+    filter: blur(32px);
+    opacity: 0.38;
+  }
+}
+
 /* Focus — visible, on the accent, never removed. */
 :focus-visible {
   outline: 2px solid rgb(var(--accent));

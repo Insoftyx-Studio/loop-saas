@@ -16,6 +16,7 @@ import { Button } from "../components/ui/Button";
 import { LoopRing } from "../components/LoopRing";
 import { Reveal, Item, fadeUp, easeOut } from "../components/motion";
 import { cn } from "../lib/cn";
+import { useReducedEffects } from "../lib/useReducedEffects";
 
 /* ---------------------------------------------------------------- */
 
@@ -120,6 +121,7 @@ function PortalMock() {
 
 function Hero() {
   const ref = useRef<HTMLDivElement>(null);
+  const reduced = useReducedEffects();
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
   const y = useTransform(scrollYProgress, [0, 1], [0, 90]);
   const fade = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
@@ -137,7 +139,12 @@ function Hero() {
       />
       <div aria-hidden className="bloom left-[6%] top-[8%] h-64 w-64" style={{ background: "rgb(var(--accent) / 0.4)" }} />
       <div aria-hidden className="bloom right-[2%] top-[30%] h-72 w-72" style={{ background: "rgb(var(--progress) / 0.28)" }} />
-      <motion.div style={{ y, opacity: fade }} className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
+      {/* Parallax is desktop-only: transforming this whole subtree on every
+         scroll frame is what makes the hero feel heavy on a phone. */}
+      <motion.div
+        style={reduced ? undefined : { y, opacity: fade }}
+        className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]"
+      >
         <div>
           <motion.p
             initial={{ opacity: 0, y: 10 }}
@@ -281,6 +288,12 @@ function Features() {
   );
 }
 
+const LOOP_STATEMENT =
+  "The share, the review, the approval — that satisfying loop, closed in one place instead of ten emails.";
+
+const LOOP_LINE_CLASS =
+  "mt-6 flex flex-wrap justify-center gap-x-[0.28em] gap-y-1 font-display text-[clamp(1.9rem,4.4vw,3.4rem)] leading-[1.12]";
+
 /* Scroll-scrubbed statement — words brighten as you read. */
 function Word({
   progress,
@@ -295,19 +308,17 @@ function Word({
   return <motion.span style={{ opacity }}>{children}</motion.span>;
 }
 
-function LoopStatement() {
+/** Desktop: each word is its own scroll-driven motion value. */
+function LoopStatementScrubbed() {
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start 0.85", "start 0.35"] });
-  const words =
-    "The share, the review, the approval — that satisfying loop, closed in one place instead of ten emails.".split(
-      " ",
-    );
+  const words = LOOP_STATEMENT.split(" ");
   return (
     <section id="loop" ref={ref} className="mx-auto max-w-4xl px-5 pb-24 text-center md:pb-32">
       <p className="text-[13px] font-medium uppercase tracking-[0.14em] text-ink-faint">
         In the loop
       </p>
-      <p className="mt-6 flex flex-wrap justify-center gap-x-[0.28em] gap-y-1 font-display text-[clamp(1.9rem,4.4vw,3.4rem)] leading-[1.12]">
+      <p className={LOOP_LINE_CLASS}>
         {words.map((w, i) => (
           <Word
             key={i}
@@ -320,6 +331,32 @@ function LoopStatement() {
       </p>
     </section>
   );
+}
+
+/** Mobile: one fade for the whole line instead of ~17 motion values writing
+ *  opacity on every scroll frame. Reads the same, costs a fraction. */
+function LoopStatementStatic() {
+  return (
+    <section id="loop" className="mx-auto max-w-4xl px-5 pb-24 text-center md:pb-32">
+      <p className="text-[13px] font-medium uppercase tracking-[0.14em] text-ink-faint">
+        In the loop
+      </p>
+      <motion.p
+        initial={{ opacity: 0, y: 8 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.25 }}
+        transition={{ duration: 0.5, ease: easeOut }}
+        className={LOOP_LINE_CLASS}
+      >
+        {LOOP_STATEMENT}
+      </motion.p>
+    </section>
+  );
+}
+
+function LoopStatement() {
+  const reduced = useReducedEffects();
+  return reduced ? <LoopStatementStatic /> : <LoopStatementScrubbed />;
 }
 
 const stats = [
